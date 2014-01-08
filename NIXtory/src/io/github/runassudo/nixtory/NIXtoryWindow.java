@@ -16,6 +16,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Properties;
+import java.util.StringTokenizer;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -37,6 +38,8 @@ import javax.swing.event.ChangeEvent;
 
 public class NIXtoryWindow {
 
+	ArrayList<Process> processes = new ArrayList<Process>();
+
 	private JFrame frame;
 	private JTabbedPane tpVideoInput;
 	private JTabbedPane tpAudioInput;
@@ -52,6 +55,9 @@ public class NIXtoryWindow {
 	private JButton btnPickWindow;
 	private JTextField txtFramerate_GLC;
 	private JTextField txtHotkey;
+	private JCheckBox chckbxLockFramerate;
+	private JTextField txtCommand;
+	private JCheckBox chckbxAutostart;
 
 	/**
 	 * Launch the application.
@@ -474,16 +480,16 @@ public class NIXtoryWindow {
 								+ "/video.mkv");
 			} else { // GLC
 				String[] base = { "glc-capture", "-f",
-						txtFramerate_GLC.getText(), "-k",
-						txtHotkey.getText(), "--disable-audio", "-o",
-						txtOutputDirectory.getText() + "/video.glc" };;
-						
+						txtFramerate_GLC.getText(), "-k", txtHotkey.getText(),
+						"--disable-audio", "-o",
+						txtOutputDirectory.getText() + "/video.glc" };
+
 				if (chckbxLockFramerate.isSelected())
-					base = concat(base, new String[] {"-n"});
+					base = concat(base, new String[] { "-n" });
 				if (chckbxAutostart.isSelected())
-					base = concat(base, new String[] {"-s"});
-				
-				String[] command = txtCommand.getText().split(" ");
+					base = concat(base, new String[] { "-s" });
+
+				String[] command = translateCommandline(txtCommand.getText());
 				String[] both = concat(base, command);
 
 				startProcess("video", both);
@@ -503,17 +509,6 @@ public class NIXtoryWindow {
 			}
 		}
 	}
-
-	public static <T> T[] concat(T[] first, T[] second) {
-		T[] result = Arrays.copyOf(first, first.length + second.length);
-		System.arraycopy(second, 0, result, first.length, second.length);
-		return result;
-	}
-
-	ArrayList<Process> processes = new ArrayList<Process>();
-	private JCheckBox chckbxLockFramerate;
-	private JTextField txtCommand;
-	private JCheckBox chckbxAutostart;
 
 	private void startProcess(final String title, String... command) {
 		try {
@@ -593,5 +588,74 @@ public class NIXtoryWindow {
 		txtInput.setColumns(10);
 
 		return wpAudioInput;
+	}
+
+	public static <T> T[] concat(T[] first, T[] second) {
+		T[] result = Arrays.copyOf(first, first.length + second.length);
+		System.arraycopy(second, 0, result, first.length, second.length);
+		return result;
+	}
+
+	// Taken from Ant
+	public static String[] translateCommandline(String toProcess) {
+		if (toProcess == null || toProcess.length() == 0) {
+			// no command? no string
+			return new String[0];
+		}
+		// parse with a simple finite state machine
+
+		final int normal = 0;
+		final int inQuote = 1;
+		final int inDoubleQuote = 2;
+		int state = normal;
+		final StringTokenizer tok = new StringTokenizer(toProcess, "\"\' ",
+				true);
+		final ArrayList<String> result = new ArrayList<String>();
+		final StringBuilder current = new StringBuilder();
+		boolean lastTokenHasBeenQuoted = false;
+
+		while (tok.hasMoreTokens()) {
+			String nextTok = tok.nextToken();
+			switch (state) {
+			case inQuote:
+				if ("\'".equals(nextTok)) {
+					lastTokenHasBeenQuoted = true;
+					state = normal;
+				} else {
+					current.append(nextTok);
+				}
+				break;
+			case inDoubleQuote:
+				if ("\"".equals(nextTok)) {
+					lastTokenHasBeenQuoted = true;
+					state = normal;
+				} else {
+					current.append(nextTok);
+				}
+				break;
+			default:
+				if ("\'".equals(nextTok)) {
+					state = inQuote;
+				} else if ("\"".equals(nextTok)) {
+					state = inDoubleQuote;
+				} else if (" ".equals(nextTok)) {
+					if (lastTokenHasBeenQuoted || current.length() != 0) {
+						result.add(current.toString());
+						current.setLength(0);
+					}
+				} else {
+					current.append(nextTok);
+				}
+				lastTokenHasBeenQuoted = false;
+				break;
+			}
+		}
+		if (lastTokenHasBeenQuoted || current.length() != 0) {
+			result.add(current.toString());
+		}
+		if (state == inQuote || state == inDoubleQuote) {
+			throw new RuntimeException("unbalanced quotes in " + toProcess);
+		}
+		return result.toArray(new String[result.size()]);
 	}
 }
