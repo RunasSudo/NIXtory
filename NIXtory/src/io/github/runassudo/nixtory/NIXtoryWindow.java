@@ -14,6 +14,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Properties;
 
 import javax.swing.BoxLayout;
@@ -31,6 +32,8 @@ import javax.swing.JTextArea;
 import javax.swing.JMenuBar;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
+import javax.swing.event.ChangeListener;
+import javax.swing.event.ChangeEvent;
 
 public class NIXtoryWindow {
 
@@ -46,6 +49,9 @@ public class NIXtoryWindow {
 	private JTextField txtFramerate;
 	private JTextArea txtrLog;
 	private JTabbedPane tpMain;
+	private JButton btnPickWindow;
+	private JTextField txtFramerate_GLC;
+	private JTextField txtHotkey;
 
 	/**
 	 * Launch the application.
@@ -111,7 +117,7 @@ public class NIXtoryWindow {
 		pnChckbxVideoInput.add(pnBtnControls, BorderLayout.EAST);
 		pnBtnControls.setLayout(new BoxLayout(pnBtnControls, BoxLayout.X_AXIS));
 
-		JButton btnPickWindow = new JButton("Pick Window");
+		btnPickWindow = new JButton("Pick Window");
 		btnPickWindow.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				try {
@@ -156,6 +162,14 @@ public class NIXtoryWindow {
 		pnBtnControls.add(btnStart);
 
 		tpVideoInput = new JTabbedPane(JTabbedPane.TOP);
+		tpVideoInput.addChangeListener(new ChangeListener() {
+			public void stateChanged(ChangeEvent arg0) {
+				if (tpVideoInput.getSelectedIndex() == 0)
+					btnPickWindow.setEnabled(true);
+				else
+					btnPickWindow.setEnabled(false);
+			}
+		});
 		pnVideoInput.add(tpVideoInput, BorderLayout.CENTER);
 
 		JPanel pnInputX11Grab = new JPanel();
@@ -199,8 +213,47 @@ public class NIXtoryWindow {
 		txtFramerate.setColumns(10);
 
 		JPanel pnInputGLC = new JPanel();
-		tpVideoInput.addTab("GLC (experimental)", null, pnInputGLC, null);
+		tpVideoInput.addTab("GLC (video only)", null, pnInputGLC, null);
 		pnInputGLC.setLayout(new BorderLayout(0, 0));
+
+		JPanel pnGLC = new JPanel();
+		pnInputGLC.add(pnGLC, BorderLayout.NORTH);
+		pnGLC.setLayout(new GridLayout(5, 2, 0, 0));
+
+		JLabel lblFramerate_GLC = new JLabel("Framerate:");
+		pnGLC.add(lblFramerate_GLC);
+
+		txtFramerate_GLC = new JTextField();
+		txtFramerate_GLC.setText("30");
+		pnGLC.add(txtFramerate_GLC);
+		txtFramerate_GLC.setColumns(10);
+
+		JLabel lblLockFramerate = new JLabel("Lock Framerate:");
+		pnGLC.add(lblLockFramerate);
+
+		chckbxLockFramerate = new JCheckBox("");
+		pnGLC.add(chckbxLockFramerate);
+
+		JLabel lblHotkey = new JLabel("Hotkey:");
+		pnGLC.add(lblHotkey);
+
+		txtHotkey = new JTextField();
+		txtHotkey.setText("<Shift>F8");
+		pnGLC.add(txtHotkey);
+		txtHotkey.setColumns(10);
+
+		JLabel lblCommand = new JLabel("Command:");
+		pnGLC.add(lblCommand);
+
+		txtCommand = new JTextField();
+		pnGLC.add(txtCommand);
+		txtCommand.setColumns(10);
+
+		JLabel lblAutostart = new JLabel("Autostart:");
+		pnGLC.add(lblAutostart);
+
+		chckbxAutostart = new JCheckBox("");
+		pnGLC.add(chckbxAutostart);
 
 		JPanel pnAudioInput = new JPanel();
 		pnOpts.add(pnAudioInput);
@@ -261,7 +314,7 @@ public class NIXtoryWindow {
 		pnOutputOptions.add(lblOutputDirectory);
 
 		txtOutputDirectory = new JTextField();
-		txtOutputDirectory.setText("/home/runassudo/Videos");
+		txtOutputDirectory.setText("/home/runassudo/Videos/NIXtory");
 		pnOutputOptions.add(txtOutputDirectory);
 		txtOutputDirectory.setColumns(30);
 
@@ -310,6 +363,14 @@ public class NIXtoryWindow {
 						txtOffset.setText(data.getProperty("offset"));
 						txtResolution.setText(data.getProperty("resolution"));
 						txtFramerate.setText(data.getProperty("framerate"));
+						txtFramerate_GLC.setText(data
+								.getProperty("framerateGLC"));
+						chckbxLockFramerate.setSelected(data.getProperty(
+								"lockFramerate").equals("true"));
+						txtHotkey.setText(data.getProperty("hotkey"));
+						txtCommand.setText(data.getProperty("command"));
+						chckbxAutostart.setSelected(data.getProperty(
+								"autostart").equals("true"));
 
 						chckbxAudioInput.setSelected(data.getProperty(
 								"audioInput").equals("true"));
@@ -353,6 +414,14 @@ public class NIXtoryWindow {
 						data.setProperty("offset", txtOffset.getText());
 						data.setProperty("resolution", txtResolution.getText());
 						data.setProperty("framerate", txtFramerate.getText());
+						data.setProperty("framerateGLC",
+								txtFramerate_GLC.getText());
+						data.setProperty("lockFramerate",
+								chckbxLockFramerate.isSelected() + "");
+						data.setProperty("hotkey", txtHotkey.getText());
+						data.setProperty("command", txtCommand.getText());
+						data.setProperty("autostart",
+								chckbxAutostart.isSelected() + "");
 
 						data.setProperty("audioInput",
 								chckbxAudioInput.isSelected() + "");
@@ -403,6 +472,21 @@ public class NIXtoryWindow {
 								+ txtOffset.getText(), "-c:v", "libx264",
 						"-crf", "0", txtOutputDirectory.getText()
 								+ "/video.mkv");
+			} else { // GLC
+				String[] base = { "glc-capture", "-f",
+						txtFramerate_GLC.getText(), "-k",
+						txtHotkey.getText(), "--disable-audio", "-o",
+						txtOutputDirectory.getText() + "/video.glc" };;
+						
+				if (chckbxLockFramerate.isSelected())
+					base = concat(base, new String[] {"-n"});
+				if (chckbxAutostart.isSelected())
+					base = concat(base, new String[] {"-s"});
+				
+				String[] command = txtCommand.getText().split(" ");
+				String[] both = concat(base, command);
+
+				startProcess("video", both);
 			}
 		}
 		if (chckbxAudioInput.isSelected()) {
@@ -420,7 +504,16 @@ public class NIXtoryWindow {
 		}
 	}
 
+	public static <T> T[] concat(T[] first, T[] second) {
+		T[] result = Arrays.copyOf(first, first.length + second.length);
+		System.arraycopy(second, 0, result, first.length, second.length);
+		return result;
+	}
+
 	ArrayList<Process> processes = new ArrayList<Process>();
+	private JCheckBox chckbxLockFramerate;
+	private JTextField txtCommand;
+	private JCheckBox chckbxAutostart;
 
 	private void startProcess(final String title, String... command) {
 		try {
@@ -433,9 +526,12 @@ public class NIXtoryWindow {
 							title)) {
 						InputStream in = p.getInputStream();
 						int d;
-						while ((d = in.read()) >= 0)
+						while ((d = in.read()) >= 0) {
 							out.write(d);
+							System.out.write(d);
+						}
 					} catch (Exception e) {
+						e.printStackTrace();
 					}
 				}
 			}).start();
