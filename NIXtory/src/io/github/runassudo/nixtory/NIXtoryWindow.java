@@ -184,7 +184,7 @@ public class NIXtoryWindow {
 
 		JPanel pnX11Grab = new JPanel();
 		pnInputX11Grab.add(pnX11Grab, BorderLayout.NORTH);
-		pnX11Grab.setLayout(new GridLayout(4, 2, 0, 0));
+		pnX11Grab.setLayout(new GridLayout(0, 2, 0, 0));
 
 		JLabel lblScreen = new JLabel("Screen:");
 		pnX11Grab.add(lblScreen);
@@ -219,12 +219,12 @@ public class NIXtoryWindow {
 		txtFramerate.setColumns(10);
 
 		JPanel pnInputGLC = new JPanel();
-		tpVideoInput.addTab("GLC (video only)", null, pnInputGLC, null);
+		tpVideoInput.addTab("GLC (beta)", null, pnInputGLC, null);
 		pnInputGLC.setLayout(new BorderLayout(0, 0));
 
 		JPanel pnGLC = new JPanel();
 		pnInputGLC.add(pnGLC, BorderLayout.NORTH);
-		pnGLC.setLayout(new GridLayout(5, 2, 0, 0));
+		pnGLC.setLayout(new GridLayout(0, 2, 0, 0));
 
 		JLabel lblFramerate_GLC = new JLabel("Framerate:");
 		pnGLC.add(lblFramerate_GLC);
@@ -479,7 +479,7 @@ public class NIXtoryWindow {
 						"-crf", "0", txtOutputDirectory.getText()
 								+ "/video.mkv");
 			} else { // GLC
-				String[] base = { "glc-capture", "-f",
+				String[] base = { "glc-capture", "-v", "3", "-f",
 						txtFramerate_GLC.getText(), "-k", txtHotkey.getText(),
 						"--disable-audio", "-o",
 						txtOutputDirectory.getText() + "/video.glc" };
@@ -511,6 +511,8 @@ public class NIXtoryWindow {
 	}
 
 	private void startProcess(final String title, String... command) {
+		System.err.println("Executing " + untranslateCommandline(command));
+		txtrLog.append(title + ": " + untranslateCommandline(command));
 		try {
 			ProcessBuilder pb = new ProcessBuilder(command);
 			pb.redirectErrorStream(true);
@@ -523,7 +525,6 @@ public class NIXtoryWindow {
 						int d;
 						while ((d = in.read()) >= 0) {
 							out.write(d);
-							System.out.write(d);
 						}
 					} catch (Exception e) {
 						e.printStackTrace();
@@ -555,7 +556,7 @@ public class NIXtoryWindow {
 		wpAudioInput.setLayout(new BorderLayout(0, 0));
 		JPanel tmpAudioInput = new JPanel();
 		wpAudioInput.add(tmpAudioInput, BorderLayout.NORTH);
-		tmpAudioInput.setLayout(new GridLayout(3, 2, 0, 0));
+		tmpAudioInput.setLayout(new GridLayout(0, 2, 0, 0));
 
 		JLabel lblName = new JLabel("Name:");
 		tmpAudioInput.add(lblName);
@@ -594,6 +595,20 @@ public class NIXtoryWindow {
 		T[] result = Arrays.copyOf(first, first.length + second.length);
 		System.arraycopy(second, 0, result, first.length, second.length);
 		return result;
+	}
+
+	public static String untranslateCommandline(String[] toProcess) {
+		StringBuilder b = new StringBuilder();
+		for (int i = 0; i < toProcess.length; i++) {
+			if (toProcess[i].contains(" "))
+				b.append("\"");
+			b.append(toProcess[i]);
+			if (toProcess[i].contains(" "))
+				b.append("\"");
+			if (i != toProcess.length - 1)
+				b.append(" ");
+		}
+		return b.toString();
 	}
 
 	// Taken from Ant
