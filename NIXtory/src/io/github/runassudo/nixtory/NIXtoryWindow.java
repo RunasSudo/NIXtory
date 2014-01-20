@@ -58,6 +58,10 @@ public class NIXtoryWindow {
 	private JCheckBox chckbxLockFramerate;
 	private JTextField txtCommand;
 	private JCheckBox chckbxAutostart;
+	private JTextField txtVideo0;
+	private JTextField txtVideo1;
+	private JTextField txtAudio0;
+	private JTextField txtAudio1;
 
 	/**
 	 * Launch the application.
@@ -96,7 +100,7 @@ public class NIXtoryWindow {
 	 */
 	private void initialize() {
 		frame = new JFrame();
-		frame.setBounds(100, 100, 450, 515);
+		frame.setBounds(100, 100, 515, 515);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.getContentPane().setLayout(new BorderLayout(0, 0));
 
@@ -342,10 +346,38 @@ public class NIXtoryWindow {
 		});
 		pnBtnStop.add(btnStop, BorderLayout.EAST);
 
+		JPanel pnLogInner = new JPanel();
+		pnLog.add(pnLogInner, BorderLayout.CENTER);
+		pnLogInner.setLayout(new BorderLayout(0, 0));
+
+		JPanel pnSummaryLog = new JPanel();
+		pnLogInner.add(pnSummaryLog, BorderLayout.SOUTH);
+		pnSummaryLog.setLayout(new GridLayout(0, 1, 0, 0));
+
+		txtVideo0 = new JTextField();
+		txtVideo0.setText("video0");
+		pnSummaryLog.add(txtVideo0);
+		txtVideo0.setColumns(10);
+
+		txtVideo1 = new JTextField();
+		txtVideo1.setText("video1");
+		pnSummaryLog.add(txtVideo1);
+		txtVideo1.setColumns(10);
+
+		txtAudio0 = new JTextField();
+		txtAudio0.setText("audio0");
+		pnSummaryLog.add(txtAudio0);
+		txtAudio0.setColumns(10);
+
+		txtAudio1 = new JTextField();
+		txtAudio1.setText("audio1");
+		pnSummaryLog.add(txtAudio1);
+		txtAudio1.setColumns(10);
+
 		txtrLog = new JTextArea();
 		txtrLog.setEditable(false);
 		JScrollPane scrollPane = new JScrollPane(txtrLog);
-		pnLog.add(scrollPane, BorderLayout.CENTER);
+		pnLogInner.add(scrollPane);
 
 		JMenuBar menuBar = new JMenuBar();
 		frame.getContentPane().add(menuBar, BorderLayout.NORTH);
@@ -472,7 +504,7 @@ public class NIXtoryWindow {
 	private void startRecording() {
 		if (chckbxVideoInput.isSelected()) {
 			if (tpVideoInput.getSelectedIndex() == 0) { // x11grab
-				startProcess("video", "ffmpeg", "-y", "-r",
+				startProcess("video0", txtVideo0, "ffmpeg", "-y", "-r",
 						txtFramerate.getText(), "-s", txtResolution.getText(),
 						"-f", "x11grab", "-i", txtScreen.getText() + "+"
 								+ txtOffset.getText(), "-c:v", "libx264",
@@ -492,7 +524,7 @@ public class NIXtoryWindow {
 				String[] command = translateCommandline(txtCommand.getText());
 				String[] both = concat(base, command);
 
-				startProcess("video", both);
+				startProcess("video0", txtVideo0, both);
 			}
 		}
 		if (chckbxAudioInput.isSelected()) {
@@ -503,14 +535,21 @@ public class NIXtoryWindow {
 				String format = ((JTextField) tab.getComponent(3)).getText();
 				String input = ((JTextField) tab.getComponent(5)).getText();
 
-				startProcess("audio" + i, "ffmpeg", "-y", "-f", format, "-i",
-						input, "-c:a", "flac", txtOutputDirectory.getText()
-								+ "/audio" + i + ".flac");
+				JTextField summary = null;
+				if (i == 0)
+					summary = txtAudio0;
+				if (i == 1)
+					summary = txtAudio1;
+
+				startProcess("audio" + i, summary, "ffmpeg", "-y", "-f",
+						format, "-i", input, "-c:a", "flac",
+						txtOutputDirectory.getText() + "/audio" + i + ".flac");
 			}
 		}
 	}
 
-	private void startProcess(final String title, String... command) {
+	private void startProcess(final String title, final JTextField summary,
+			String... command) {
 		System.err.println("Executing " + untranslateCommandline(command));
 		txtrLog.append(title + ": " + untranslateCommandline(command));
 		try {
@@ -520,7 +559,7 @@ public class NIXtoryWindow {
 			new Thread(new Runnable() {
 				public void run() {
 					try (OutputStream out = new TextAreaOutputStream(txtrLog,
-							title)) {
+							summary, title)) {
 						InputStream in = p.getInputStream();
 						int d;
 						while ((d = in.read()) >= 0) {
