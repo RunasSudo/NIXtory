@@ -8,6 +8,7 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -503,48 +504,93 @@ public class NIXtoryWindow {
 
 	private void startRecording() {
 		if (chckbxVideoInput.isSelected()) {
-			if (tpVideoInput.getSelectedIndex() == 0) { // x11grab
-				startProcess("video0", txtVideo0, "ffmpeg", "-y", "-r",
-						txtFramerate.getText(), "-s", txtResolution.getText(),
-						"-f", "x11grab", "-i", txtScreen.getText() + "+"
-								+ txtOffset.getText(), "-c:v", "libx264",
-						"-crf", "0", txtOutputDirectory.getText()
-								+ "/video.mkv");
-			} else { // GLC
-				String[] base = { "glc-capture", "-v", "3", "-f",
-						txtFramerate_GLC.getText(), "-k", txtHotkey.getText(),
-						"--disable-audio", "-o",
-						txtOutputDirectory.getText() + "/video.glc" };
-
-				if (chckbxLockFramerate.isSelected())
-					base = concat(base, new String[] { "-n" });
-				if (chckbxAutostart.isSelected())
-					base = concat(base, new String[] { "-s" });
-
-				String[] command = translateCommandline(txtCommand.getText());
-				String[] both = concat(base, command);
-
-				startProcess("video0", txtVideo0, both);
+			if (tpVideoInput.getSelectedIndex() == 0) {
+				startX11Grab();
+			} else {
+				startGLC();
+			}
+		} else {
+			if (chckbxAudioInput.isSelected()) {
+				startAudio();
 			}
 		}
-		if (chckbxAudioInput.isSelected()) {
-			for (int i = 0; i < tpAudioInput.getTabCount(); i++) {
-				JPanel wp = (JPanel) tpAudioInput.getComponentAt(i);
-				JPanel tab = (JPanel) wp.getComponent(0);
+	}
 
-				String format = ((JTextField) tab.getComponent(3)).getText();
-				String input = ((JTextField) tab.getComponent(5)).getText();
+	private void startX11Grab() {
+		startProcess("video0", txtVideo0, "ffmpeg", "-y", "-r",
+				txtFramerate.getText(), "-s", txtResolution.getText(), "-f",
+				"x11grab", "-i",
+				txtScreen.getText() + "+" + txtOffset.getText(), "-c:v",
+				"libx264", "-crf", "0", "-preset", "ultrafast",
+				txtOutputDirectory.getText() + "/video.mkv");
+	}
 
-				JTextField summary = null;
-				if (i == 0)
-					summary = txtAudio0;
-				if (i == 1)
-					summary = txtAudio1;
+	private void startGLC() {
+		final String glcFile = txtOutputDirectory.getText() + "/video.glc";
+		final String mkvFile = txtOutputDirectory.getText() + "/video.mkv";
 
-				startProcess("audio" + i, summary, "ffmpeg", "-y", "-f",
-						format, "-i", input, "-c:a", "flac",
-						txtOutputDirectory.getText() + "/audio" + i + ".flac");
+		String[] base = { "glc-capture", "-v", "3", "-f",
+				txtFramerate_GLC.getText(), "-k", txtHotkey.getText(),
+				"--disable-audio", "-o", glcFile };
+
+		if (chckbxLockFramerate.isSelected())
+			base = concat(base, new String[] { "-n" });
+		if (chckbxAutostart.isSelected())
+			base = concat(base, new String[] { "-s" });
+
+		String[] command = translateCommandline(txtCommand.getText());
+		String[] both = concat(base, command);
+
+		try {
+			new ProcessBuilder("rm", glcFile).start().waitFor();
+			new ProcessBuilder("rm", mkvFile).start().waitFor();
+			new ProcessBuilder("mkfifo", glcFile).start().waitFor();
+			startProcess("video0", txtVideo0, both);
+			// Crazy hax
+			startProcess("video1", txtVideo1, "/bin/sh", "-c", "glc-play \""
+					+ glcFile + "\" -y 1 -o - | ffmpeg -y -r "
+					+ txtFramerate_GLC.getText()
+					+ " -i - -crf 0 -preset ultrafast \"" + mkvFile + "\"");
+
+			if (chckbxAutostart.isSelected()) {
+				startAudio();
+			} else { // :D
+				new Thread(new Runnable() {
+					public void run() {
+						while (!new File(mkvFile).exists())
+							try {
+								Thread.sleep(500);
+							} catch (InterruptedException e) {
+							}
+
+						if (chckbxAudioInput.isSelected()) {
+							startAudio();
+						}
+					}
+				}).start();
 			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void startAudio() {
+		for (int i = 0; i < tpAudioInput.getTabCount(); i++) {
+			JPanel wp = (JPanel) tpAudioInput.getComponentAt(i);
+			JPanel tab = (JPanel) wp.getComponent(0);
+
+			String format = ((JTextField) tab.getComponent(3)).getText();
+			String input = ((JTextField) tab.getComponent(5)).getText();
+
+			JTextField summary = null;
+			if (i == 0)
+				summary = txtAudio0;
+			if (i == 1)
+				summary = txtAudio1;
+
+			startProcess("audio" + i, summary, "ffmpeg", "-y", "-f", format,
+					"-i", input, "-c:a", "flac", txtOutputDirectory.getText()
+							+ "/audio" + i + ".flac");
 		}
 	}
 
@@ -577,8 +623,7 @@ public class NIXtoryWindow {
 	}
 
 	private void findSettings() {
-		if (System.getenv("DISPLAY") != null)
-			txtScreen.setText(System.getenv("DISPLAY"));
+		txtScreen.setText(System.getenv("DISPLAY"));
 
 		DisplayMode dm = GraphicsEnvironment.getLocalGraphicsEnvironment()
 				.getDefaultScreenDevice().getDisplayMode();
