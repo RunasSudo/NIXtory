@@ -78,13 +78,13 @@ public class NIXtoryWindow {
 
 		JPanel tabProfile = new JPanel();
 		tpMain.addTab("Profile", null, tabProfile, null);
-		tabProfile.setLayout(new FormLayout(
-				new ColumnSpec[] { FormFactory.DEFAULT_COLSPEC,
+		tabProfile
+				.setLayout(new FormLayout(new ColumnSpec[] {
+						FormFactory.DEFAULT_COLSPEC,
 						FormFactory.RELATED_GAP_COLSPEC,
 						ColumnSpec.decode("default:grow"),
 						FormFactory.RELATED_GAP_COLSPEC,
 						FormFactory.DEFAULT_COLSPEC,
-						FormFactory.RELATED_GAP_COLSPEC,
 						FormFactory.DEFAULT_COLSPEC, }, new RowSpec[] {
 						FormFactory.RELATED_GAP_ROWSPEC,
 						FormFactory.DEFAULT_ROWSPEC,
@@ -100,17 +100,65 @@ public class NIXtoryWindow {
 		tabProfile.add(ddSettingsProfile, "3, 2");
 
 		JButton btnSaveProfile = new JButton("");
-		btnSaveProfile.setIcon(new ImageIcon(NIXtoryWindow.class
-				.getResource("/io/github/runassudo/nixtory/assets/tick.png")));
+		btnSaveProfile
+				.setIcon(new ImageIcon(
+						NIXtoryWindow.class
+								.getResource("/io/github/runassudo/nixtory/assets/dialog-apply.png")));
+		btnSaveProfile.putClientProperty("JButton.buttonType", "segmented");
+		btnSaveProfile.putClientProperty("JButton.segmentPosition", "first");
 		tabProfile.add(btnSaveProfile, "5, 2");
 
 		JButton btnDeleteProfile = new JButton("");
-		btnDeleteProfile.setIcon(new ImageIcon(NIXtoryWindow.class
-				.getResource("/io/github/runassudo/nixtory/assets/cross.png")));
-		tabProfile.add(btnDeleteProfile, "7, 2");
+		btnDeleteProfile
+				.setIcon(new ImageIcon(
+						NIXtoryWindow.class
+								.getResource("/io/github/runassudo/nixtory/assets/window-close.png")));
+		btnDeleteProfile.putClientProperty("JButton.buttonType", "segmented");
+		btnDeleteProfile.putClientProperty("JButton.segmentPosition", "last");
+		tabProfile.add(btnDeleteProfile, "6, 2");
 
 		JPanel tabInput = new JPanel();
 		tpMain.addTab("Input", null, tabInput, null);
+		tabInput.setLayout(new FormLayout(new ColumnSpec[] {
+				ColumnSpec.decode("default:grow"),
+				FormFactory.RELATED_GAP_COLSPEC, FormFactory.DEFAULT_COLSPEC,
+				FormFactory.DEFAULT_COLSPEC, FormFactory.DEFAULT_COLSPEC, },
+				new RowSpec[] { FormFactory.RELATED_GAP_ROWSPEC,
+						FormFactory.DEFAULT_ROWSPEC,
+						FormFactory.RELATED_GAP_ROWSPEC,
+						FormFactory.DEFAULT_ROWSPEC, }));
+
+		JLabel lblVideoInputs = new JLabel("Video Inputs");
+		tabInput.add(lblVideoInputs, "1, 2");
+
+		JButton btnAddVideoInput = new JButton("");
+		btnAddVideoInput
+				.setIcon(new ImageIcon(
+						NIXtoryWindow.class
+								.getResource("/io/github/runassudo/nixtory/assets/list-add.png")));
+		btnAddVideoInput.putClientProperty("JButton.buttonType", "segmented");
+		btnAddVideoInput.putClientProperty("JButton.segmentPosition", "first");
+		tabInput.add(btnAddVideoInput, "3, 2");
+
+		JButton btnRemoveVideoInput = new JButton("");
+		btnRemoveVideoInput
+				.setIcon(new ImageIcon(
+						NIXtoryWindow.class
+								.getResource("/io/github/runassudo/nixtory/assets/list-remove.png")));
+		btnRemoveVideoInput
+				.putClientProperty("JButton.buttonType", "segmented");
+		btnRemoveVideoInput.putClientProperty("JButton.segmentPosition",
+				"middle");
+		tabInput.add(btnRemoveVideoInput, "4, 2");
+
+		JButton btnEditVideoInput = new JButton("");
+		btnEditVideoInput
+				.setIcon(new ImageIcon(
+						NIXtoryWindow.class
+								.getResource("/io/github/runassudo/nixtory/assets/gtk-edit.png")));
+		btnEditVideoInput.putClientProperty("JButton.buttonType", "segmented");
+		btnEditVideoInput.putClientProperty("JButton.segmentPosition", "last");
+		tabInput.add(btnEditVideoInput, "5, 2");
 
 		JPanel tabEncoder = new JPanel();
 		tpMain.addTab("Encoder", null, tabEncoder, null);
