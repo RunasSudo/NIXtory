@@ -1,4 +1,4 @@
-package io.github.runassudo.nixtory;
+package io.github.runassudo.libnixtory;
 
 import java.io.File;
 
