@@ -1,11 +1,15 @@
 package io.github.runassudo.nixtory;
 
 import io.github.runassudo.libnixtory.AudioInput;
+import io.github.runassudo.libnixtory.FFmpegInput;
+import io.github.runassudo.libnixtory.NIXtory;
 import io.github.runassudo.libnixtory.SettingsProfile;
 import io.github.runassudo.libnixtory.VideoInput;
 
 import java.awt.BorderLayout;
 import java.awt.EventQueue;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.beans.Beans;
 
 import javax.swing.DefaultComboBoxModel;
@@ -17,17 +21,17 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 
 import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
-import javax.swing.JScrollPane;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
 
 public class NIXtoryWindow {
+
+	private NIXtory nixtory;
 
 	private JFrame frmNixtoryDev;
 	private JComboBox<SettingsProfile> ddSettingsProfile;
@@ -61,6 +65,8 @@ public class NIXtoryWindow {
 	 * Create the application.
 	 */
 	public NIXtoryWindow() {
+		nixtory = new NIXtory();
+
 		initialize();
 		if (!Beans.isDesignTime()) {
 			loadProfiles();
@@ -149,13 +155,16 @@ public class NIXtoryWindow {
 		JButton btnAddVideoInput = new JButton("");
 		btnAddVideoInput.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				// TODO: Add actual Video Input.
-				modelVideoInputs.addElement(new VideoInput() {
-					@Override
-					public String toString() {
-						return "Screen Capture (0.0, 0x0, 1600x900)";
-					}
-				});
+				InputEditorWindow inputEditor = new InputEditorWindow(true,
+						new InputEditedListener() {
+							@Override
+							public void inputEdited(FFmpegInput input) {
+								modelVideoInputs.addElement((VideoInput) input);
+								nixtory.getVideoInputs()
+										.add((VideoInput) input);
+							}
+						});
+				inputEditor.setVisible(true);
 			}
 		});
 		btnAddVideoInput
@@ -170,8 +179,11 @@ public class NIXtoryWindow {
 		btnRemoveVideoInput.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				int sel = listVideoInputs.getSelectedIndex();
-				if (sel >= 0)
-					modelVideoInputs.remove(sel);
+				if (sel >= 0) {
+					VideoInput input = listVideoInputs.getSelectedValue();
+					modelVideoInputs.removeElement(input);
+					nixtory.getVideoInputs().remove(input);
+				}
 			}
 		});
 		btnRemoveVideoInput
