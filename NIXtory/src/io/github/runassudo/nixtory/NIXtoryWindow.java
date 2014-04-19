@@ -219,13 +219,16 @@ public class NIXtoryWindow {
 		JButton btnAddAudioInput = new JButton("");
 		btnAddAudioInput.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				// TODO: Add actual Audio Input.
-				modelAudioInputs.addElement(new AudioInput() {
-					@Override
-					public String toString() {
-						return "Screen Capture (0.0, 0x0, 1600x900)";
-					}
-				});
+				InputEditorWindow inputEditor = new InputEditorWindow(false,
+						new InputEditedListener() {
+							@Override
+							public void inputEdited(FFmpegInput input) {
+								modelAudioInputs.addElement((AudioInput) input);
+								nixtory.getAudioInputs()
+										.add((AudioInput) input);
+							}
+						});
+				inputEditor.setVisible(true);
 			}
 		});
 		btnAddAudioInput
