@@ -564,7 +564,7 @@ public class SeaGlassTitlePane extends JComponent implements SeaglassUI, Propert
         iconButton.addActionListener(iconifyAction);
 
         if (iconButtonToolTip != null && iconButtonToolTip.length() != 0) {
-            iconButton.setToolTipText(iconButtonToolTip);
+            // iconButton.setToolTipText(iconButtonToolTip);
         }
 
         maxButton = new NoFocusButton("InternalFrameTitlePane.maximizeButtonAccessibleName");
@@ -574,7 +574,7 @@ public class SeaGlassTitlePane extends JComponent implements SeaglassUI, Propert
         closeButton.addActionListener(closeAction);
 
         if (closeButtonToolTip != null && closeButtonToolTip.length() != 0) {
-            closeButton.setToolTipText(closeButtonToolTip);
+            // closeButton.setToolTipText(closeButtonToolTip);
         }
 
         setButtonTooltips();
@@ -587,29 +587,29 @@ public class SeaGlassTitlePane extends JComponent implements SeaglassUI, Propert
         if (isParentIcon()) {
 
             if (restoreButtonToolTip != null && restoreButtonToolTip.length() != 0) {
-                iconButton.setToolTipText(restoreButtonToolTip);
+                // iconButton.setToolTipText(restoreButtonToolTip);
             }
 
             if (maxButtonToolTip != null && maxButtonToolTip.length() != 0) {
-                maxButton.setToolTipText(maxButtonToolTip);
+                // maxButton.setToolTipText(maxButtonToolTip);
             }
         } else if (isParentMaximum()) {
 
             if (iconButtonToolTip != null && iconButtonToolTip.length() != 0) {
-                iconButton.setToolTipText(iconButtonToolTip);
+                // iconButton.setToolTipText(iconButtonToolTip);
             }
 
             if (restoreButtonToolTip != null && restoreButtonToolTip.length() != 0) {
-                maxButton.setToolTipText(restoreButtonToolTip);
+                // maxButton.setToolTipText(restoreButtonToolTip);
             }
         } else {
 
             if (iconButtonToolTip != null && iconButtonToolTip.length() != 0) {
-                iconButton.setToolTipText(iconButtonToolTip);
+                // iconButton.setToolTipText(iconButtonToolTip);
             }
 
             if (maxButtonToolTip != null && maxButtonToolTip.length() != 0) {
-                maxButton.setToolTipText(maxButtonToolTip);
+                // maxButton.setToolTipText(maxButtonToolTip);
             }
         }
     }
