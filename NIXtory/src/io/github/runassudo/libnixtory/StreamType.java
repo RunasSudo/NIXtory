@@ -16,16 +16,20 @@
 
 package io.github.runassudo.libnixtory;
 
-public class StreamType {
-	String streamName;
-	Class<? extends NIXtoryStream> streamClass;
+public class StreamType<T extends NIXtoryStream> {
+	private String streamName;
+	private Class<T> streamClass;
 
-	StreamType(String streamName, Class<? extends NIXtoryStream> streamClass) {
+	public StreamType(String streamName, Class<T> streamClass) {
 		this.streamName = streamName;
 		this.streamClass = streamClass;
 	}
 
 	public String toString() {
 		return streamName;
+	}
+
+	public Class<T> getStreamClass() {
+		return streamClass;
 	}
 }

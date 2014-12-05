@@ -36,18 +36,19 @@ import java.awt.event.ActionEvent;
 
 import javax.swing.DefaultComboBoxModel;
 
-public class WindowStreamTypeChooser extends JFrame {
+public class WindowStreamTypeChooser<T extends NIXtoryStream> extends JFrame {
 
 	private static final long serialVersionUID = -8188755290868529101L;
 	private JPanel contentPane;
 
-	private StreamTypeChooserCallback callback;
+	private StreamTypeChooserCallback<T> callback;
 
 	/**
 	 * Create the frame.
 	 */
-	public WindowStreamTypeChooser(StreamTypeChooserCallback callback,
-			StreamType[] streamTypes) {
+	public WindowStreamTypeChooser(
+			StreamTypeChooserCallback<T> callback,
+			StreamType<T>[] streamTypes) {
 		setTitle("Choose Stream Type");
 		this.callback = callback;
 
@@ -58,9 +59,9 @@ public class WindowStreamTypeChooser extends JFrame {
 		setContentPane(contentPane);
 		contentPane.setLayout(new GridLayout(0, 1, 0, 0));
 
-		JComboBox<StreamType> cbStreamType = new JComboBox<>();
+		final JComboBox<StreamType<T>> cbStreamType = new JComboBox<>();
 		cbStreamType
-				.setModel(new DefaultComboBoxModel<StreamType>(streamTypes));
+				.setModel(new DefaultComboBoxModel<StreamType<T>>(streamTypes));
 		contentPane.add(cbStreamType);
 
 		JPanel panelActions = new JPanel();
@@ -73,8 +74,12 @@ public class WindowStreamTypeChooser extends JFrame {
 
 		JButton btnOK = new JButton("");
 		btnOK.addActionListener(new ActionListener() {
+			@SuppressWarnings("unchecked")
 			public void actionPerformed(ActionEvent e) {
-				WindowStreamTypeChooser.this.callback.streamTypeChosen(null);
+				WindowStreamTypeChooser.this.callback
+						.streamTypeChosen(((StreamType<T>) cbStreamType
+								.getSelectedItem()).getStreamClass());
+				WindowStreamTypeChooser.this.dispose();
 			}
 		});
 		btnOK.setIcon(new ImageIcon(
@@ -92,7 +97,7 @@ public class WindowStreamTypeChooser extends JFrame {
 		pack();
 	}
 
-	interface StreamTypeChooserCallback {
-		public void streamTypeChosen(Class<? extends NIXtoryStream> streamType);
+	interface StreamTypeChooserCallback<T> {
+		public void streamTypeChosen(Class<T> streamType);
 	}
 }

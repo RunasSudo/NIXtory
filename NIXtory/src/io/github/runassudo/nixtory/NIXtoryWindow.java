@@ -18,7 +18,8 @@ package io.github.runassudo.nixtory;
 
 import io.github.runassudo.libnixtory.NIXtoryInput;
 import io.github.runassudo.libnixtory.NIXtoryOutput;
-import io.github.runassudo.libnixtory.StreamType;
+import io.github.runassudo.libnixtory.NIXtoryStream;
+import io.github.runassudo.nixtory.WindowStreamTypeChooser.StreamTypeChooserCallback;
 
 import java.awt.EventQueue;
 
@@ -147,7 +148,8 @@ public class NIXtoryWindow {
 		JScrollPane spOverviewInputs = new JScrollPane();
 		pnOverviewInputs.add(spOverviewInputs, BorderLayout.CENTER);
 
-		DefaultListModel<NIXtoryInput> modelInputs = new DefaultListModel<>();
+		final DefaultListModel<NIXtoryInput> modelInputs =
+				new DefaultListModel<>();
 		JList<NIXtoryInput> listOverviewInputs = new JList<>(modelInputs);
 		spOverviewInputs.setViewportView(listOverviewInputs);
 
@@ -161,7 +163,8 @@ public class NIXtoryWindow {
 		JScrollPane spOverviewOutputs = new JScrollPane();
 		pnOverviewOutputs.add(spOverviewOutputs, BorderLayout.CENTER);
 
-		DefaultListModel<NIXtoryOutput> modelOutputs = new DefaultListModel<>();
+		final DefaultListModel<NIXtoryOutput> modelOutputs =
+				new DefaultListModel<>();
 		JList<NIXtoryOutput> listOverviewOutputs = new JList<>(modelOutputs);
 		spOverviewOutputs.setViewportView(listOverviewOutputs);
 
@@ -193,9 +196,11 @@ public class NIXtoryWindow {
 
 		JButton btnInputAdd = new JButton("");
 		btnInputAdd.addActionListener(new ActionListener() {
+			@SuppressWarnings("unchecked")
 			public void actionPerformed(ActionEvent e) {
-				WindowStreamTypeChooser chooser =
-						new WindowStreamTypeChooser(null, new StreamType[0]);
+				WindowStreamTypeChooser<NIXtoryInput> chooser =
+						new WindowStreamTypeChooser<>(new AddStreamHandler<>(
+								modelInputs), NIXtoryInput.getSupportedInputs());
 				chooser.setLocationRelativeTo(frmNixtory);
 				chooser.setVisible(true);
 			}
@@ -240,9 +245,12 @@ public class NIXtoryWindow {
 
 		JButton btnOutputAdd = new JButton("");
 		btnOutputAdd.addActionListener(new ActionListener() {
+			@SuppressWarnings("unchecked")
 			public void actionPerformed(ActionEvent e) {
-				WindowStreamTypeChooser chooser =
-						new WindowStreamTypeChooser(null, new StreamType[0]);
+				WindowStreamTypeChooser<NIXtoryOutput> chooser =
+						new WindowStreamTypeChooser<>(new AddStreamHandler<>(
+								modelOutputs), NIXtoryOutput
+								.getSupportedOutputs());
 				chooser.setLocationRelativeTo(frmNixtory);
 				chooser.setVisible(true);
 			}
@@ -275,5 +283,22 @@ public class NIXtoryWindow {
 
 		JPanel pnStatus = new JPanel();
 		tpMain.addTab("Status", null, pnStatus, null);
+	}
+
+	class AddStreamHandler<T extends NIXtoryStream> implements
+			StreamTypeChooserCallback<T> {
+		DefaultListModel<T> model;
+
+		public AddStreamHandler(DefaultListModel<T> model) {
+			this.model = model;
+		}
+
+		public void streamTypeChosen(Class<T> streamType) {
+			try {
+				model.addElement(streamType.newInstance());
+			} catch (InstantiationException | IllegalAccessException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 }
