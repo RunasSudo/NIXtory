@@ -16,6 +16,6 @@
 
 package io.github.runassudo.libnixtory;
 
-public class NIXtoryOutput {
+public class NIXtoryOutput extends NIXtoryStream {
 
 }
